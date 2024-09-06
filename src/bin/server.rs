@@ -1,6 +1,11 @@
 use clap::Parser;
 use libp2p::{
-    autonat, futures::StreamExt, identify, identity, multiaddr::Protocol, swarm::{NetworkBehaviour, SwarmEvent}, Multiaddr, SwarmBuilder
+    autonat,
+    futures::StreamExt,
+    identify, identity,
+    multiaddr::Protocol,
+    swarm::{NetworkBehaviour, SwarmEvent},
+    Multiaddr, SwarmBuilder,
 };
 use rand::rngs::OsRng;
 use std::{error::Error, net::Ipv4Addr, time::Duration};
@@ -12,7 +17,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let mut swarm = SwarmBuilder::with_new_identity()
         .with_tokio()
         .with_quic()
-        .with_behaviour(|key| Behaviour::new(key.public()))?
+        .with_behaviour(|key| {
+            println!("Peer Id: {}", key.public().to_peer_id().to_string());
+
+            Behaviour::new(key.public())
+        })?
         .with_swarm_config(|c| c.with_idle_connection_timeout(Duration::from_secs(60)))
         .build();
 

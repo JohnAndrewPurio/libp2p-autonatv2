@@ -5,7 +5,7 @@ use libp2p::{
     identify, identity,
     multiaddr::Protocol,
     swarm::{dial_opts::DialOpts, NetworkBehaviour, SwarmEvent},
-    Multiaddr, SwarmBuilder,
+    Multiaddr, PeerId, SwarmBuilder,
 };
 use rand::rngs::OsRng;
 use std::{error::Error, net::Ipv4Addr, time::Duration};
@@ -29,8 +29,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
     )?;
 
     swarm.dial(
-        DialOpts::unknown_peer_id()
-            .address(opt.server_address)
+        DialOpts::peer_id(opt.server_peer_id)
+            .addresses(vec![opt.server_address])
             .build(),
     )?;
 
@@ -69,6 +69,9 @@ struct Opt {
     /// Port where the client will listen for incoming connections.
     #[clap(short = 'p', long, default_value_t = 0)]
     listen_port: u16,
+
+    #[clap(long)]
+    server_peer_id: PeerId,
 
     /// Address of the server where want to connect to.
     #[clap(short = 'a', long)]
