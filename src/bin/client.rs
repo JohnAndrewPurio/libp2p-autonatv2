@@ -4,8 +4,9 @@ use libp2p::{
     futures::StreamExt,
     identify, identity,
     multiaddr::Protocol,
+    noise,
     swarm::{dial_opts::DialOpts, NetworkBehaviour, SwarmEvent},
-    Multiaddr, PeerId, SwarmBuilder,
+    tcp, yamux, Multiaddr, PeerId, SwarmBuilder,
 };
 use rand::rngs::OsRng;
 use std::{error::Error, net::Ipv4Addr, time::Duration};
@@ -16,10 +17,21 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let mut swarm = SwarmBuilder::with_new_identity()
         .with_tokio()
+        .with_tcp(
+            tcp::Config::default(),
+            noise::Config::new,
+            yamux::Config::default,
+        )?
         .with_quic()
         .with_behaviour(|key| Behaviour::new(key.public(), opt.probe_interval))?
         .with_swarm_config(|c| c.with_idle_connection_timeout(Duration::from_secs(60)))
         .build();
+
+    swarm.listen_on(
+        Multiaddr::empty()
+            .with(Protocol::Ip4(Ipv4Addr::UNSPECIFIED))
+            .with(Protocol::Tcp(opt.listen_port)),
+    )?;
 
     swarm.listen_on(
         Multiaddr::empty()
